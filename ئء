@@ -1,0 +1,89 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# إنشاء بيانات المبيعات اليومية
+np.random.seed(42)
+
+dates = pd.date_range(
+    start='2023-01-01',
+    end='2024-12-31',
+    freq='D'
+)
+
+sales = (
+    np.random.randint(500, 2000, size=len(dates))
+    + np.where(pd.Series(dates).dt.month.isin([11, 12]), 800, 0)
+)
+
+daily_sales = pd.DataFrame({
+    'date': dates,
+    'sales': sales
+})
+
+# 1) التأكد من نوع التاريخ
+daily_sales['date'] = pd.to_datetime(daily_sales['date'])
+print("Date dtype:", daily_sales['date'].dtype)
+
+# 2) إضافة أعمدة السنة والشهر واسم اليوم
+daily_sales['year'] = daily_sales['date'].dt.year
+daily_sales['month'] = daily_sales['date'].dt.month
+daily_sales['day_of_week'] = daily_sales['date'].dt.day_name()
+
+# 3) تعيين التاريخ كـ Index
+daily_sales = daily_sales.set_index('date')
+
+print("\nFirst 5 rows:")
+print(daily_sales.head())
+
+# 4) عرض بيانات نوفمبر 2023
+print("\nNovember 2023 Sales:")
+print(daily_sales.loc['2023-11'])
+
+# ====================================
+# Resampling
+# ====================================
+
+# 1) المبيعات الأسبوعية
+weekly_sales = daily_sales[['sales']].resample('W').sum()
+
+plt.figure(figsize=(12, 5))
+plt.plot(weekly_sales.index, weekly_sales['sales'])
+plt.title('Weekly Sales')
+plt.xlabel('Date')
+plt.ylabel('Sales')
+plt.grid(True)
+plt.show()
+
+# 2) المبيعات الشهرية
+monthly_sales = daily_sales[['sales']].resample('M').sum()
+
+plt.figure(figsize=(12, 5))
+plt.plot(monthly_sales.index, monthly_sales['sales'], color='red')
+plt.title('Monthly Sales')
+plt.xlabel('Date')
+plt.ylabel('Sales')
+plt.grid(True)
+plt.show()
+
+# 3) متوسط المبيعات اليومية لكل شهر
+monthly_avg_sales = daily_sales[['sales']].resample('M').mean()
+
+print("\nMonthly Sales Sum:")
+print(monthly_sales.head())
+
+print("\nMonthly Daily Average Sales:")
+print(monthly_avg_sales.head())
+
+# الفرق بين المجموع والمتوسط
+print("\nExplanation:")
+print("- Monthly Sum = إجمالي المبيعات خلال الشهر.")
+print("- Monthly Mean = متوسط المبيعات اليومية داخل الشهر.")
+
+# 4) متى نستخدم التلخيص الشهري؟
+print("\nAnswer:")
+print(
+    "نستخدم التلخيص الشهري عندما نريد رؤية الاتجاهات العامة وتقليل تأثير "
+    "التقلبات اليومية. كما يساعد على اكتشاف الأنماط الموسمية مثل ارتفاع "
+    "المبيعات في شهري نوفمبر وديسمبر بشكل أوضح."
+)
